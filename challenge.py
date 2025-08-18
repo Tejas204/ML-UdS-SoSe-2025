@@ -5,6 +5,7 @@ from util import load_dataset
 from util import store_predictions
 from util import segment_with_knn
 from util import visualize
+from dataset_loader import SEGMENTATION_DATASET
 
 
 ######### Training dataset

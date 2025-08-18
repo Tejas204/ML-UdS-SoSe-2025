@@ -1,9 +1,16 @@
+# -------------------------------------------------------------------------------------------------------------
+# Imports
+# -------------------------------------------------------------------------------------------------------------
 import os
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 from typing import Any
+
+from sklearn.cluster import KMeans
+
+
 
 
 ######### Methods for loading dataset
@@ -99,23 +106,10 @@ def store_predictions(
 
 ######### Methods for baseline model
 
-def augment_image_scribble(image, scribble):
-    """Generate augmented image and scribble pairs."""
-    augmentations = []
-    # Horizontal flip
-    augmentations.append((np.fliplr(image), np.fliplr(scribble)))
-    # Vertical flip
-    augmentations.append((np.flipud(image), np.flipud(scribble)))
-    # Rotation (±10 degrees)
-    angle = np.random.uniform(-10, 10)
-    augmentations.append((rotate(image, angle, reshape=False, mode='nearest'),
-                         rotate(scribble, angle, reshape=False, mode='nearest', order=0)))
-    return augmentations
-
 def segment_with_knn(
     image: np.ndarray,
     scribble: np.ndarray,
-    k: int = 5
+    k: int = 3
 ) -> np.ndarray:
     """
     Segment an image using K-Nearest Neighbors classifier based on RGB scribble.
@@ -133,8 +127,7 @@ def segment_with_knn(
     assert C == 3, "Image must be RGB."
 
     # Reshape image to (H*W, 3)
-    image_smoothed = gaussian(image, sigma=1)
-    image_flat = image_smoothed.reshape(-1, 3)
+    image_flat = image.reshape(-1, 3)
 
     # Flatten scribble mask
     scribbles_flat = scribble.flatten()
@@ -145,66 +138,33 @@ def segment_with_knn(
 
     # Prepare training data
     X_train = image_flat[labeled_mask]
-    y_train_orig = scribbles_flat[labeled_mask]  # Keep original for mask assignment
-
-    # Data augmentation
-    X_train_aug = [X_train]
-    y_train_aug = [y_train_orig]
-    # aug_pairs = augment_image_scribble(image, scribble)
-    # for aug_img, aug_scr in aug_pairs:
-    #     # Ensure augmented scribble has valid values
-    #     aug_scr = np.round(aug_scr).astype(np.uint8)  # Handle interpolation artifacts
-    #     aug_scr[~np.isin(aug_scr, [0, 1])] = 255  # Force invalid values to unmarked
-    #     aug_flat = gaussian(aug_img, sigma=1).reshape(-1, 3)
-    #     aug_scr_flat = aug_scr.flatten()
-    #     aug_labeled_mask = (aug_scr_flat != 255)
-    #     X_train_aug.append(aug_flat[aug_labeled_mask])
-    #     y_train_aug.append(aug_scr_flat[aug_labeled_mask])
-
-    # Combine original and augmented training data
-    X_train = np.vstack(X_train_aug)
-    y_train = np.hstack(y_train_aug)
+    y_train = scribbles_flat[labeled_mask]
 
     # Prepare test data
     X_test = image_flat[unlabeled_mask]
 
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
-
     # Train KNN
-    knn = KNeighborsClassifier(n_neighbors=k, weights='distance')
+    knn = KNeighborsClassifier(n_neighbors=k)
     knn.fit(X_train, y_train)
 
     # Predict on unlabeled pixels
-    y_pred_knn = knn.predict(X_test)
-
-    X_train_full = np.vstack([X_train, X_test])
-    y_train_full = np.hstack([y_train, y_pred_knn])
-
-    unique_classes = np.unique(y_train_full)
-    if len(unique_classes) < 2:
-        y_pred = np.full(X_test.shape[0], unique_classes[0], dtype=np.uint8)
-    else:
-        logistic_reg = LogisticRegression(
-            C=1.0,
-            max_iter=1000,
-            random_state=42,
-            solver="liblinear",
-            class_weight="balanced"
-        )
-        logistic_reg.fit(X_train_full, y_train_full)
-        y_pred = logistic_reg.predict(X_test)   
-
+    y_pred = knn.predict(X_test)
 
     # Reconstruct full prediction mask
     predicted_mask = np.zeros_like(scribbles_flat)
-    predicted_mask[labeled_mask] = y_train_orig  # Use original labels
+    predicted_mask[labeled_mask] = y_train
     predicted_mask[unlabeled_mask] = y_pred
 
     # Reshape to (H, W)
     return predicted_mask.reshape(H, W)
- 
+
+# -------------------------------------------------------------------------------------------------------------
+# K means clustering
+# -------------------------------------------------------------------------------------------------------------
+def segment_with_kmeans(clusters=2):
+    kmeans = KMeans(n_clusters=clusters, random_state=0, n_init='auto')
+    kmeans.fit(X_train)
+    
 
 
 ######### Methods for visualization

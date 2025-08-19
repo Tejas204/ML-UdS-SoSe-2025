@@ -89,6 +89,8 @@ class TRAINER_EVALUATOR():
                 preds = (preds > 0.5).float()
 
                 for i in range(imgs.size(0)):
-                    mask = preds[i].cpu().numpy().squeeze() * 255
-                    mask = Image.fromarray(mask.astype(np.uint8))
+                    mask = preds[i].cpu().numpy()   # (1,H,W)
+                    mask = np.squeeze(mask)         # (H,W)
+                    mask = (mask * 255).astype(np.uint8)
+                    mask = Image.fromarray(mask)    # now valid
                     mask.save(os.path.join(save_dir, f"mask_{idx}_{i}.png"))

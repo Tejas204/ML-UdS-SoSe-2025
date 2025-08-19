@@ -19,7 +19,7 @@ class TRAINER_EVALUATOR():
 
 
     '''
-    @Funcion: 
+    @Function: 
         - train_pretrained_cnn_vit_no_patch
         - Used to train the CNN model on the dataset
     '''
@@ -40,10 +40,10 @@ class TRAINER_EVALUATOR():
                 model.train()
                 total_loss = 0.0
 
-                for blurry, sharp in dataloader:
+                for image, gt in dataloader:
                     optimizer.zero_grad()
-                    output = model(blurry)
-                    loss = criterion(output, sharp)
+                    output = model(image)
+                    loss = criterion(output, gt)
                     loss.backward()
                     optimizer.step()
 
@@ -65,18 +65,13 @@ class TRAINER_EVALUATOR():
                 log.flush()
 
     def eval_cnn(self, model, val_loader, criterion):
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model = model.to(device)
         model.eval()
         total_loss = 0.0
 
         with torch.no_grad():
-            for blur, sharp in val_loader:
-                blur = blur.to(device)
-                sharp = sharp.to(device)
-
-                outputs = model(blur)
-                loss = criterion(outputs, sharp)
+            for image, gt in val_loader:
+                outputs = model(image)
+                loss = criterion(outputs, gt)
                 total_loss += loss.item()
         
         print(f"Total loss: {total_loss}")

@@ -19,8 +19,8 @@ class CNN_MODEL(nn.Module):
         # Initialize variables
         self.input_size = input_size
         self.hidden_layers = hidden_layers
-        self.activation = self.activation
-        self.norm_layer = self.norm_layer
+        self.activation = activation
+        self.norm_layer = norm_layer
         self.max_pooling = max_pooling
         self.drop_prob = drop_prob
 

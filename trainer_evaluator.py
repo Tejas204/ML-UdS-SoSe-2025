@@ -40,6 +40,7 @@ class TRAINER_EVALUATOR():
                 model.train()
                 total_loss = 0.0
 
+                print(f"Epoch {epoch}: Started training")
                 for image, gt in dataloader:
                     optimizer.zero_grad()
                     output = model(image)
@@ -48,7 +49,8 @@ class TRAINER_EVALUATOR():
                     optimizer.step()
 
                     total_loss += loss.item()
-
+                
+                print(f"Total loss after epoch {epoch}: {total_loss}")
                 avg_loss = total_loss / len(dataloader)
                 history['train_loss'].append(avg_loss)
                 history['epochs'].append(epoch)
@@ -77,12 +79,11 @@ class TRAINER_EVALUATOR():
         print(f"Total loss: {total_loss}")
 
     
-    def save_predictions(model, loader, device, save_dir="dataset/training/cnn_predictions"):
+    def save_predictions(self, model, loader, save_dir="dataset/training/cnn_predictions"):
         os.makedirs(save_dir, exist_ok=True)
         model.eval()
         with torch.no_grad():
             for idx, (imgs, _) in enumerate(loader):
-                imgs = imgs.to(device)
                 outputs = model(imgs)
                 preds = torch.sigmoid(outputs)
                 preds = (preds > 0.5).float()

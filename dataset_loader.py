@@ -40,7 +40,7 @@ class TRAIN_SEGMENTATION_DATASET(Dataset):
             image = self.transform(image)
             gt_image = self.transform(gt_image) if self.gt_images else None
 
-        return image, gt_image
+        return image, gt_image, self.images[idx]
     
 
 class TEST_SEGMENTATION_DATASET(Dataset):
@@ -64,4 +64,4 @@ class TEST_SEGMENTATION_DATASET(Dataset):
         if self.transform:
             image = self.transform(image)
 
-        return image
+        return image, self.images[idx]

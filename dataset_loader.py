@@ -14,9 +14,9 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 
 class SEGMENTATION_DATASET(Dataset):
-    def __init__(self, image_dir, gt_dir, transform=None):
+    def __init__(self, image_dir, gt_dir=None, transform=None):
         self.images = sorted(os.listdir(image_dir))
-        self.gt_images = sorted(os.listdir(gt_dir))
+        self.gt_images = sorted(os.listdir(gt_dir)) if gt_dir else None
         self.image_dir = image_dir
         self.gt_dir = gt_dir
         self.transform = transform
@@ -38,6 +38,6 @@ class SEGMENTATION_DATASET(Dataset):
 
         if self.transform:
             image = self.transform(image)
-            gt_image = self.transform(gt_image)
+            gt_image = self.transform(gt_image) if self.gt_images else None
 
         return image, gt_image

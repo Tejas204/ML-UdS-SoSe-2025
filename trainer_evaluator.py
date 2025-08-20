@@ -90,6 +90,7 @@ class TRAINER_EVALUATOR():
 
                 for i in range(imgs.size(0)):
                     mask = preds[i].cpu().numpy()   # (1,H,W)
+                    # Image._show(mask)
                     mask = np.squeeze(mask)         # (H,W)
                     mask = (mask * 255).astype(np.uint8)
                     mask = Image.fromarray(mask)    # now valid

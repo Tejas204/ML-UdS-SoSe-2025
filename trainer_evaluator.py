@@ -83,15 +83,12 @@ class TRAINER_EVALUATOR():
         os.makedirs(save_dir, exist_ok=True)
         model.eval()
         with torch.no_grad():
-            for idx, (imgs, _) in enumerate(loader):
-                outputs = model(imgs)
-                preds = torch.sigmoid(outputs)
-                preds = (preds > 0.5).float()
+            for images, filenames in loader:
+                outputs = model(images)
+                preds = (outputs > 0.5).float()
 
-                for i in range(imgs.size(0)):
-                    mask = preds[i].cpu().numpy()   # (1,H,W)
-                    # Image._show(mask)
-                    mask = np.squeeze(mask)         # (H,W)
-                    mask = (mask * 255).astype(np.uint8)
-                    mask = Image.fromarray(mask)    # now valid
-                    mask.save(os.path.join(save_dir, f"mask_{idx}_{i}.png"))
+                for i in range(images.size(0)):
+                    mask = preds[i].cpu().squeeze().numpy() * 255
+                    mask_img = Image.fromarray(mask.astype(np.uint8))
+                    save_path = os.path.join(save_dir, filenames[i])
+                    mask_img.save(save_path)  # keep same filename as input

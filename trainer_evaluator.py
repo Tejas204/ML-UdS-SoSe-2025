@@ -23,7 +23,7 @@ class TRAINER_EVALUATOR():
         - train_pretrained_cnn_vit_no_patch
         - Used to train the CNN model on the dataset
     '''
-    def train_cnn(self, model, dataloader, optimizer, criterion, epochs=5, log_file='logs/cnn_training_log.txt', best_model_dir='models/cnn/'):
+    def train_cnn(self, model, dataloader, optimizer, criterion, device, epochs=5, log_file='logs/cnn_training_log.txt', best_model_dir='models/cnn/'):
 
         os.makedirs(best_model_dir, exist_ok=True)
         best_loss = float('inf')
@@ -42,6 +42,7 @@ class TRAINER_EVALUATOR():
 
                 print(f"Epoch {epoch}: Started training")
                 for image, gt in dataloader:
+                    image, gt = image.to(device), gt.to(device)
                     optimizer.zero_grad()
                     output = model(image)
                     loss = criterion(output, gt)
@@ -79,11 +80,12 @@ class TRAINER_EVALUATOR():
         print(f"Total loss: {total_loss}")
 
     
-    def save_predictions(self, model, loader, save_dir="dataset/training/cnn_predictions"):
+    def save_predictions(self, model, loader, device, save_dir="dataset/training/cnn_predictions"):
         os.makedirs(save_dir, exist_ok=True)
         model.eval()
         with torch.no_grad():
             for images, filenames in loader:
+                images = images.to(device)
                 outputs = model(images)
                 preds = (outputs > 0.5).float()
 

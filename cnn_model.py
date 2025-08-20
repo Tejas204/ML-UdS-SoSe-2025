@@ -47,7 +47,10 @@ class CNN_MODEL(nn.Module):
                 layers.append(nn.MaxPool2d(2,2))
 
             # Add non-linear activation
-            layers.append(self.activation())
+            if i == len(self.hidden_layers):
+                layers.append(nn.Sigmoid())
+            else:
+                layers.append(self.activation())
 
             # Add dropout
             if self.drop_prob:

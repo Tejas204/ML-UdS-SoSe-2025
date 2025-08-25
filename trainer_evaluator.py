@@ -12,6 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as functional
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
+from cnn_model import CNN_MODEL
 
 class TRAINER_EVALUATOR():
     def __init__(self):
@@ -105,7 +106,12 @@ class TRAINER_EVALUATOR():
     
     def save_predictions(self, model, loader, device, save_dir="dataset/training/cnn_predictions"):
         os.makedirs(save_dir, exist_ok=True)
+
+        device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+        model = CNN_MODEL().to(device)
+        model.load_state_dict(torch.load("models/cnn/best_model.pth", map_location=device))
         model.eval()
+
         with torch.no_grad():
             for images, filenames in loader:
                 images = images.to(device)

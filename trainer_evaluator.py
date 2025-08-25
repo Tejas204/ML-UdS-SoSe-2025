@@ -23,10 +23,9 @@ class TRAINER_EVALUATOR():
         - train_pretrained_cnn_vit_no_patch
         - Used to train the CNN model on the dataset
     '''
-    def train_cnn(self, model, dataloader, optimizer, criterion, device, epochs=5, log_file='logs/cnn_training_log.txt', best_model_dir='models/cnn/', save_dir="dataset/training/cnn_predictions"):
+    def train_cnn(self, model, dataloader, optimizer, criterion, device, epochs=5, log_file='logs/cnn_training_log.txt', best_model_dir='models/cnn/'):
 
         os.makedirs(best_model_dir, exist_ok=True)
-        os.makedirs(save_dir, exist_ok=True)
         best_loss = float('inf')
 
         # Define structures for capturing loss and epochs
@@ -52,28 +51,28 @@ class TRAINER_EVALUATOR():
 
                     total_loss += loss.item()
 
-                    # ----------------------
-                    # Save predictions for this batch
-                    # ----------------------
-                    model.eval()
-                    with torch.no_grad():
-                        preds = (output > 0.5).float()  # binary mask
-                        print(preds)
+                #     # ----------------------
+                #     # Save predictions for this batch
+                #     # ----------------------
+                #     model.eval()
+                #     with torch.no_grad():
+                #         preds = (output > 0.5).float()  # binary mask
+                #         # print(preds)
 
-                        for i in range(image.size(0)):
-                            mask = preds[i].cpu().numpy()        # shape (1,H,W) usually
-                            mask = np.squeeze(mask)              # now shape (H,W)
-                            mask = (mask > 0.5).astype(np.uint8) * 255
+                #         for i in range(image.size(0)):
+                #             mask = preds[i].cpu().numpy()        # shape (1,H,W) usually
+                #             mask = np.squeeze(mask)              # now shape (H,W)
+                #             mask = (mask > 0.5).astype(np.uint8) * 255
 
-                            # Create RGB mask
-                            rgb_mask = np.zeros((mask.shape[0], mask.shape[1], 3), dtype=np.uint8)
-                            rgb_mask[mask == 255] = [255, 0, 0]
+                #             # Create RGB mask
+                #             rgb_mask = np.zeros((mask.shape[0], mask.shape[1], 3), dtype=np.uint8)
+                #             rgb_mask[mask == 255] = [255, 0, 0]
 
-                            # Save mask with epoch, batch, and image index
-                            save_path = os.path.join(save_dir, filenames[i])
-                            Image.fromarray(rgb_mask).save(save_path)
+                #             # Save mask with epoch, batch, and image index
+                #             save_path = os.path.join(save_dir, filenames[i])
+                #             Image.fromarray(rgb_mask).save(save_path)
 
-                model.train()
+                # model.train()
                 
                 print(f"Total loss after epoch {epoch}: {total_loss}")
                 avg_loss = total_loss / len(dataloader)
@@ -104,25 +103,27 @@ class TRAINER_EVALUATOR():
         print(f"Total loss: {total_loss}")
 
     
-    # def save_predictions(self, model, loader, device, ):
-    #     os.makedirs(save_dir, exist_ok=True)
-    #     model.eval()
-    #     with torch.no_grad():
-    #         for images, filenames in loader:
-    #             images = images.to(device)
-    #             outputs = model(images)
-    #             preds = (outputs > 0.5).float()
+    def save_predictions(self, model, loader, device, save_dir="dataset/training/cnn_predictions"):
+        os.makedirs(save_dir, exist_ok=True)
+        model.eval()
+        with torch.no_grad():
+            for images, filenames in loader:
+                images = images.to(device)
+                outputs = model(images)
+                print(outputs.cpu().numpy())
+                print(outputs.shape)
+                preds = (outputs > 0.5).float()
 
-    #             for i in range(images.size(0)):
-    #                 mask = preds[i].cpu().squeeze().numpy() * 255
-    #                 mask = mask.astype(np.uint8)
+                for i in range(images.size(0)):
+                    mask = preds[i].cpu().squeeze().numpy() * 255
+                    mask = mask.astype(np.uint8)
 
-    #                 # Create RGB version
-    #                 rgb_mask = np.zeros((mask.shape[0], mask.shape[1], 3), dtype=np.uint8)
-    #                 rgb_mask[mask == 255, 0] = 255  # red channel
-    #                 rgb_mask[mask == 255, 1] = 0    # green channel
-    #                 rgb_mask[mask == 255, 2] = 0    # blue channel
+                    # Create RGB version
+                    rgb_mask = np.zeros((mask.shape[0], mask.shape[1], 3), dtype=np.uint8)
+                    rgb_mask[mask == 255, 0] = 255  # red channel
+                    rgb_mask[mask == 255, 1] = 0    # green channel
+                    rgb_mask[mask == 255, 2] = 0    # blue channel
 
-    #                 mask_img = Image.fromarray(rgb_mask)
-    #                 save_path = os.path.join(save_dir, filenames[i])
-    #                 mask_img.save(save_path)
+                    mask_img = Image.fromarray(rgb_mask)
+                    save_path = os.path.join(save_dir, filenames[i])
+                    mask_img.save(save_path)

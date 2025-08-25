@@ -13,6 +13,7 @@ import torch.nn.functional as functional
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from cnn_model import CNN_MODEL
+from cnn_config import cnn_experiment_1
 
 class TRAINER_EVALUATOR():
     def __init__(self):
@@ -107,25 +108,30 @@ class TRAINER_EVALUATOR():
     def save_predictions(self, model, loader, device, save_dir="dataset/training/cnn_predictions"):
         os.makedirs(save_dir, exist_ok=True)
 
-        device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-        model = CNN_MODEL().to(device)
+        model = CNN_MODEL(cnn_experiment_1['model_args']['input_size'], cnn_experiment_1['model_args']['hidden_layers'], cnn_experiment_1['model_args']['activation'], cnn_experiment_1['model_args']['norm_layer'], cnn_experiment_1['model_args']['drop_prob'], cnn_experiment_1['model_args']['max_pooling']).to(device)
         model.load_state_dict(torch.load("models/cnn/best_model.pth", map_location=device))
         model.eval()
 
         with torch.no_grad():
-            for images, filenames in loader:
+            for images, gt, filenames in loader:
                 images = images.to(device)
                 outputs = model(images)
-                print(outputs.cpu().numpy())
+                # print(outputs.cpu().numpy())
                 print(outputs.shape)
                 preds = (outputs > 0.5).float()
+                print(f"preds: {preds.shape}")
 
                 for i in range(images.size(0)):
-                    mask = preds[i].cpu().squeeze().numpy() * 255
-                    mask = mask.astype(np.uint8)
+                    mask = preds[i].cpu().numpy()
+                    mask = np.squeeze(mask)
+                    print(f"mask: {mask.shape}")
+                    mask = mask.astype(np.uint8) * 255
+                    print(f"mask: {mask.shape}")
 
                     # Create RGB version
                     rgb_mask = np.zeros((mask.shape[0], mask.shape[1], 3), dtype=np.uint8)
+                    print(f"rgb_mask: {rgb_mask.shape}")
+                    Image._show(Image.fromarray(rgb_mask))
                     rgb_mask[mask == 255, 0] = 255  # red channel
                     rgb_mask[mask == 255, 1] = 0    # green channel
                     rgb_mask[mask == 255, 2] = 0    # blue channel

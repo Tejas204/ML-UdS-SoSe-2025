@@ -31,7 +31,7 @@ class TRAIN_SEGMENTATION_DATASET(Dataset):
 
         try:
             image = Image.open(image_path).convert("RGB")
-            gt_image = Image.open(gt_path).convert("RGB")
+            gt_image = Image.open(gt_path).convert("L")
         except Exception as e:
             print(f"Error loading image pair: {image_path}, {gt_path} - {e}")
             return None  # Optionally, raise instead

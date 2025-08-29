@@ -116,22 +116,15 @@ class TRAINER_EVALUATOR():
             for images, gt, filenames in loader:
                 images = images.to(device)
                 outputs = model(images)
-                # print(outputs.cpu().numpy())
-                print(outputs.shape)
                 preds = (outputs > 0.5).float()
-                print(f"preds: {preds.shape}")
 
                 for i in range(images.size(0)):
                     mask = preds[i].cpu().numpy()
                     mask = np.squeeze(mask)
-                    print(f"mask: {mask.shape}")
                     mask = mask.astype(np.uint8) * 255
-                    print(f"mask: {mask.shape}")
 
                     # Create RGB version
                     rgb_mask = np.zeros((mask.shape[0], mask.shape[1], 3), dtype=np.uint8)
-                    print(f"rgb_mask: {rgb_mask.shape}")
-                    Image._show(Image.fromarray(rgb_mask))
                     rgb_mask[mask == 255, 0] = 255  # red channel
                     rgb_mask[mask == 255, 1] = 0    # green channel
                     rgb_mask[mask == 255, 2] = 0    # blue channel
